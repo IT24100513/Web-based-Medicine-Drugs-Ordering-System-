@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediStock Pro - Inventory</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #e6f0ff, #f0f7ff);
+            min-height: 100vh;
+        }
+        .header {
+            background-color: #1e40af;
+            color: white;
+            padding: 25px 0;
+            text-align: center;
+            border-radius: 0 0 20px 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        .table-container {
+            max-width: 95%;
+            margin: auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+        }
+        table {
+            border-radius: 15px;
+            overflow: hidden;
+            width: 100%;
+        }
+        thead {
+            background: #3b82f6;
+            color: #fff;
+        }
+        th, td {
+            text-align: center;
+            vertical-align: middle !important;
+        }
+        tr:nth-child(even) {
+            background-color: #dbeafe;
+        }
+        .btn-edit {
+            background-color: #2563eb;
+            color: white;
+            border-radius: 50px;
+            padding: 5px 12px;
+            transition: transform 0.2s;
+        }
+        .btn-edit:hover {
+            transform: scale(1.05);
+        }
+        .btn-delete {
+            background-color: #ef4444;
+            color: white;
+            border-radius: 50px;
+            padding: 5px 12px;
+            transition: transform 0.2s;
+        }
+        .btn-delete:hover {
+            transform: scale(1.05);
+        }
+        .add-btn {
+            background-color: #2563eb;
+            color: white;
+            border-radius: 50px;
+            padding: 10px 20px;
+            transition: transform 0.2s;
+            display: inline-block;
+            margin-top: 15px;
+            text-decoration: none;
+        }
+        .add-btn:hover {
+            transform: scale(1.05);
+            color: white;
+        }
+        input, select {
+            border: 1px solid #93c5fd;
+        }
+        input:focus, select:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px #3b82f6;
+        }
+        .hover-row:hover {
+            background-color: #bfdbfe;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <h1>💊 MediStock Pro</h1>
+    <p class="text-sm">Medicine Stock Management</p>
+</div>
+<div class="table-container">
+    <div class="flex justify-between mb-4">
+        <input type="text" id="searchInput" placeholder="Search medicines..." class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 flex-1 mr-2">
+        <select id="categoryFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400">
+            <option value="">All Categories</option>
+            <option value="antibiotics">Antibiotics</option>
+            <option value="painkillers">Pain Relief</option>
+            <option value="vitamins">Vitamins</option>
+            <option value="cardiac">Cardiac</option>
+        </select>
+        <button id="addItemBtn" class="add-btn">+ Add Medicine</button>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="table-auto text-sm">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Qty</th>
+                <th>Price</th>
+                <th>Category</th>
+                <th>Expiry</th>
+                <th>Batch</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody id="inventoryList">
+            <!-- Inventory will render here -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add Item Modal -->
+<div id="addItemModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 p-6 fade-in">
+        <h3 class="text-xl font-semibold text-gray-900 mb-4">Add New Medicine</h3>
+        <form id="addItemForm" class="space-y-4">
+            <input type="text" id="medicineName" placeholder="Medicine Name" required class="w-full px-4 py-2 border rounded-lg">
+            <div class="grid grid-cols-2 gap-4">
+                <input type="number" id="quantity" placeholder="Quantity" required class="w-full px-4 py-2 border rounded-lg">
+                <input type="number" id="unitPrice" step="0.01" placeholder="Unit Price" required class="w-full px-4 py-2 border rounded-lg">
+            </div>
+            <select id="category" required class="w-full px-4 py-2 border rounded-lg">
+                <option value="">Select Category</option>
+                <option value="antibiotics">Antibiotics</option>
+                <option value="painkillers">Pain Relief</option>
+                <option value="vitamins">Vitamins</option>
+                <option value="cardiac">Cardiac</option>
+            </select>
+            <input type="date" id="expiryDate" required class="w-full px-4 py-2 border rounded-lg">
+            <div class="flex space-x-3 pt-4">
+                <button type="button" id="cancelBtn" class="flex-1 px-4 py-2 border text-gray-700 rounded-lg hover:bg-gray-50">Cancel</button>
+                <button type="submit" class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg">Add Medicine</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    let inventory = [
+        { id: 1, name: 'Paracetamol 500mg', quantity: 150, unitPrice: 0.25, category: 'painkillers', expiry: '2025-12-15', batch: 'BTH001' },
+        { id: 2, name: 'Amoxicillin 250mg', quantity: 80, unitPrice: 1.50, category: 'antibiotics', expiry: '2025-08-20', batch: 'BTH002' },
+        { id: 3, name: 'Ibuprofen 400mg', quantity: 200, unitPrice: 0.35, category: 'painkillers', expiry: '2025-11-30', batch: 'BTH003' },
+        { id: 4, name: 'Vitamin D3 1000IU', quantity: 120, unitPrice: 0.75, category: 'vitamins', expiry: '2026-03-10', batch: 'BTH004' },
+        { id: 5, name: 'Aspirin 100mg', quantity: 50, unitPrice: 0.15, category: 'cardiac', expiry: '2024-07-25', batch: 'BTH005' },
+        { id: 6, name: 'Cefalexin 500mg', quantity: 90, unitPrice: 1.20, category: 'antibiotics', expiry: '2025-09-15', batch: 'BTH006' },
+        { id: 7, name: 'Metformin 500mg', quantity: 130, unitPrice: 0.50, category: 'cardiac', expiry: '2026-01-10', batch: 'BTH007' },
+        { id: 8, name: 'Omeprazole 20mg', quantity: 75, unitPrice: 0.65, category: 'painkillers', expiry: '2025-12-01', batch: 'BTH008' },
+        { id: 9, name: 'Cetirizine 10mg', quantity: 180, unitPrice: 0.30, category: 'vitamins', expiry: '2026-04-20', batch: 'BTH009' },
+        { id: 10, name: 'Azithromycin 250mg', quantity: 60, unitPrice: 1.80, category: 'antibiotics', expiry: '2025-07-18', batch: 'BTH010' },
+        { id: 11, name: 'Clopidogrel 75mg', quantity: 100, unitPrice: 0.90, category: 'cardiac', expiry: '2025-10-05', batch: 'BTH011' },
+        { id: 12, name: 'Vitamin C 500mg', quantity: 150, unitPrice: 0.40, category: 'vitamins', expiry: '2026-02-28', batch: 'BTH012' },
+        { id: 13, name: 'Doxycycline 100mg', quantity: 70, unitPrice: 1.10, category: 'antibiotics', expiry: '2025-09-25', batch: 'BTH013' },
+        { id: 14, name: 'Hydrochlorothiazide 25mg', quantity: 90, unitPrice: 0.55, category: 'cardiac', expiry: '2025-11-12', batch: 'BTH014' },
+        { id: 15, name: 'Naproxen 250mg', quantity: 110, unitPrice: 0.45, category: 'painkillers', expiry: '2026-01-18', batch: 'BTH015' },
+        { id: 16, name: 'Amoxicillin-Clavulanate 500mg', quantity: 65, unitPrice: 1.75, category: 'antibiotics', expiry: '2025-12-20', batch: 'BTH016' },
+        { id: 17, name: 'Losartan 50mg', quantity: 120, unitPrice: 0.60, category: 'cardiac', expiry: '2026-03-30', batch: 'BTH017' },
+        { id: 18, name: 'Pantoprazole 40mg', quantity: 80, unitPrice: 0.70, category: 'painkillers', expiry: '2026-05-15', batch: 'BTH018' },
+        { id: 19, name: 'Levocetirizine 5mg', quantity: 140, unitPrice: 0.35, category: 'vitamins', expiry: '2025-08-28', batch: 'BTH019' },
+        { id: 20, name: 'Cefuroxime 250mg', quantity: 75, unitPrice: 1.40, category: 'antibiotics', expiry: '2026-02-12', batch: 'BTH020' },
+        { id: 21, name: 'Amlodipine 5mg', quantity: 130, unitPrice: 0.50, category: 'cardiac', expiry: '2026-04-10', batch: 'BTH021' },
+        { id: 22, name: 'Diclofenac 50mg', quantity: 95, unitPrice: 0.40, category: 'painkillers', expiry: '2025-11-28', batch: 'BTH022' },
+        { id: 23, name: 'Ranitidine 150mg', quantity: 85, unitPrice: 0.55, category: 'painkillers', expiry: '2025-10-20', batch: 'BTH023' },
+        { id: 24, name: 'Sildenafil 50mg', quantity: 50, unitPrice: 2.50, category: 'cardiac', expiry: '2025-09-30', batch: 'BTH024' },
+        { id: 25, name: 'Metronidazole 400mg', quantity: 60, unitPrice: 0.90, category: 'antibiotics', expiry: '2025-12-05', batch: 'BTH025' },
+        { id: 26, name: 'Folic Acid 5mg', quantity: 140, unitPrice: 0.25, category: 'vitamins', expiry: '2026-06-10', batch: 'BTH026' },
+        { id: 27, name: 'Prednisolone 10mg', quantity: 70, unitPrice: 1.20, category: 'painkillers', expiry: '2025-11-22', batch: 'BTH027' },
+        { id: 28, name: 'Captopril 25mg', quantity: 100, unitPrice: 0.45, category: 'cardiac', expiry: '2026-01-05', batch: 'BTH028' },
+        { id: 29, name: 'Levofloxacin 500mg', quantity: 55, unitPrice: 2.00, category: 'antibiotics', expiry: '2025-12-18', batch: 'BTH029' },
+        { id: 30, name: 'Multivitamin Tablet', quantity: 160, unitPrice: 0.60, category: 'vitamins', expiry: '2026-03-15', batch: 'BTH030' }
+    ];
+
+    const inventoryList = document.getElementById('inventoryList');
+    const addItemModal = document.getElementById('addItemModal');
+    const addItemBtn = document.getElementById('addItemBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const addItemForm = document.getElementById('addItemForm');
+    const searchInput = document.getElementById('searchInput');
+    const categoryFilter = document.getElementById('categoryFilter');
+
+    function renderInventory(items = inventory) {
+        inventoryList.innerHTML = items.map(item => `<tr class="hover-row">
+            <td>${item.id}</td>
+            <td>${item.name}</td>
+            <td>${item.quantity}</td>
+            <td>LKR ${item.unitPrice.toFixed(2)}</td>
+            <td>${item.category}</td>
+            <td>${item.expiry}</td>
+            <td>${item.batch}</td>
+            <td>
+                <button onclick="editItem(${item.id})" class="btn-edit btn-sm">Edit</button>
+                <button onclick="deleteItem(${item.id})" class="btn-delete btn-sm">Delete</button>
+            </td>
+        </tr>`).join('');
+    }
+
+    function filterInventory() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const selectedCategory = categoryFilter.value;
+        const filtered = inventory.filter(item =>
+            item.name.toLowerCase().includes(searchTerm) &&
+            (!selectedCategory || item.category === selectedCategory)
+        );
+        renderInventory(filtered);
+    }
+
+    addItemBtn.addEventListener('click', () => {
+        addItemModal.classList.remove('hidden');
+        addItemModal.classList.add('flex');
+    });
+
+    cancelBtn.addEventListener('click', () => {
+        addItemModal.classList.add('hidden');
+        addItemModal.classList.remove('flex');
+        addItemForm.reset();
+    });
+
+    addItemForm.addEventListener('submit', e => {
+        e.preventDefault();
+        const newItem = {
+            id: inventory.length + 1,
+            name: document.getElementById('medicineName').value,
+            quantity: parseInt(document.getElementById('quantity').value),
+            unitPrice: parseFloat(document.getElementById('unitPrice').value),
+            category: document.getElementById('category').value,
+            expiry: document.getElementById('expiryDate').value,
+            batch: 'BTH' + String(inventory.length + 1).padStart(3, '0')
+        };
+        inventory.push(newItem);
+        renderInventory();
+        addItemModal.classList.add('hidden');
+        addItemModal.classList.remove('flex');
+        addItemForm.reset();
+    });
+
+    searchInput.addEventListener('input', filterInventory);
+    categoryFilter.addEventListener('change', filterInventory);
+
+    function editItem(id) {
+        const item = inventory.find(i => i.id === id);
+        if(item) {
+            const newQty = prompt(`Edit quantity for ${item.name}:`, item.quantity);
+            if(newQty && !isNaN(newQty)) {
+                item.quantity = parseInt(newQty);
+                renderInventory();
+            }
+        }
+    }
+
+    function deleteItem(id) {
+        if(confirm('Are you sure?')) {
+            inventory = inventory.filter(i => i.id !== id);
+            renderInventory();
+        }
+    }
+
+    addItemModal.addEventListener('click', e => {
+        if(e.target === addItemModal){
+            addItemModal.classList.add('hidden');
+            addItemModal.classList.remove('flex');
+            addItemForm.reset();
+        }
+    });
+
+    renderInventory();
+</script>
+</body>
+</html>

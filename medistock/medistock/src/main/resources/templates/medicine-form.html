@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Lovely Meds - Add Medicine</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    body {
+        font-family: 'Poppins', sans-serif;
+        background: linear-gradient(135deg, #ffe6f0, #fff0f5);
+        color: #333;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+    .header {
+        background-color: #ff69b4;
+        color: white;
+        padding: 30px 0;
+        text-align: center;
+        border-radius: 0 0 20px 20px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+    }
+    .form-container {
+        max-width: 500px;
+        margin: auto;
+        background-color: #fff;
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+    }
+    .form-label {
+        font-weight: 500;
+        margin-top: 15px;
+    }
+    .form-control {
+        border-radius: 15px;
+        padding: 10px 15px;
+    }
+    .btn-custom {
+        background-color: #ff69b4;
+        color: white;
+        border-radius: 50px;
+        padding: 10px 20px;
+        transition: transform 0.2s;
+        width: 100%;
+        margin-top: 20px;
+    }
+    .btn-custom:hover {
+        transform: scale(1.05);
+    }
+    .back-link {
+        display: block;
+        text-align: center;
+        margin-top: 15px;
+        color: #ff69b4;
+        text-decoration: none;
+        font-weight: 500;
+    }
+    .back-link:hover {
+        text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1><i class="bi bi-heart-fill"></i> Add New Medicine</h1>
+  <p class="lead">Manage your inventory with style 💖</p>
+</div>
+
+<div class="form-container">
+  <form th:action="@{/medicines}" th:object="${medicine}" method="post">
+    <input type="hidden" th:field="*{id}"/>
+
+    <label class="form-label">Name:</label>
+    <input type="text" class="form-control" th:field="*{name}" required/>
+
+    <label class="form-label">Quantity:</label>
+    <input type="number" class="form-control" th:field="*{quantity}" required/>
+
+    <label class="form-label">Unit Price:</label>
+    <input type="number" step="0.01" class="form-control" th:field="*{unitPrice}" required/>
+
+    <label class="form-label">Category:</label>
+    <input type="text" class="form-control" th:field="*{category}"/>
+
+    <label class="form-label">Expiry:</label>
+    <input type="text" class="form-control" th:field="*{expiry}"/>
+
+    <label class="form-label">Batch:</label>
+    <input type="text" class="form-control" th:field="*{batch}"/>
+
+    <button type="submit" class="btn btn-custom">💾 Save Medicine</button>
+  </form>
+
+  <a href="/medicines" class="back-link">← Back to List</a>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

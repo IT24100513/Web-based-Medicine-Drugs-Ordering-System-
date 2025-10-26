@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediStock Pro - Inventory</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Poppins', sans-serif; background: linear-gradient(135deg, #e6f0ff, #f0f7ff); min-height: 100vh; }
+        .header { background-color: #1e40af; color: white; padding: 25px 0; text-align: center; border-radius: 0 0 20px 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); margin-bottom: 30px; }
+        .table-container { max-width: 95%; margin: auto; background-color: #fff; padding: 20px; border-radius: 20px; box-shadow: 0 8px 25px rgba(0,0,0,0.08); }
+        table { border-radius: 15px; overflow: hidden; width: 100%; }
+        thead { background: #3b82f6; color: #fff; }
+        th, td { text-align: center; vertical-align: middle !important; }
+        tr:nth-child(even) { background-color: #dbeafe; }
+        .btn-edit { background-color: #2563eb; color: white; border-radius: 50px; padding: 5px 12px; transition: transform 0.2s; }
+        .btn-edit:hover { transform: scale(1.05); }
+        .btn-delete { background-color: #ef4444; color: white; border-radius: 50px; padding: 5px 12px; transition: transform 0.2s; }
+        .btn-delete:hover { transform: scale(1.05); }
+        .add-btn { background-color: #2563eb; color: white; border-radius: 50px; padding: 10px 20px; transition: transform 0.2s; display: inline-block; margin-top: 15px; text-decoration: none; }
+        .add-btn:hover { transform: scale(1.05); color: white; }
+        input, select { border: 1px solid #93c5fd; }
+        input:focus, select:focus { outline: none; box-shadow: 0 0 0 2px #3b82f6; }
+        .hover-row:hover { background-color: #bfdbfe; }
+    </style>
+</head>
+<body>
+<div class="header">
+    <h1>💊 MediStock Pro</h1>
+    <p class="text-sm">Medicine Stock Management</p>
+</div>
+<div class="table-container">
+    <div class="flex justify-between mb-4">
+        <input type="text" id="searchInput" placeholder="Search medicines..." class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 flex-1 mr-2">
+        <select id="categoryFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400">
+            <option value="">All Categories</option>
+            <option value="antibiotics">Antibiotics</option>
+            <option value="painkillers">Pain Relief</option>
+            <option value="vitamins">Vitamins</option>
+            <option value="cardiac">Cardiac</option>
+        </select>
+        <button id="addItemBtn" class="add-btn">+ Add Medicine</button>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="table-auto text-sm">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Qty</th>
+                <th>Price</th>
+                <th>Category</th>
+                <th>Expiry</th>
+                <th>Batch</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody id="inventoryList">
+            <!-- Inventory will render here -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add Item Modal -->
+<div id="addItemModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 p-6 fade-in">
+        <h3 class="text-xl font-semibold text-gray-900 mb-4">Add New Medicine</h3>
+        <form id="addItemForm" class="space-y-4">
+            <input type="text" id="medicineName" placeholder="Medicine Name" required class="w-full px-4 py-2 border rounded-lg">
+            <div class="grid grid-cols-2 gap-4">
+                <input type="number" id="quantity" placeholder="Quantity" required class="w-full px-4 py-2 border rounded-lg">
+                <input type="number" id="unitPrice" step="0.01" placeholder="Unit Price" required class="w-full px-4 py-2 border rounded-lg">
+            </div>
+            <select id="category" required class="w-full px-4 py-2 border rounded-lg">
+                <option value="">Select Category</option>
+                <option value="antibiotics">Antibiotics</option>
+                <option value="painkillers">Pain Relief</option>
+                <option value="vitamins">Vitamins</option>
+                <option value="cardiac">Cardiac</option>
+            </select>
+            <input type="date" id="expiryDate" required class="w-full px-4 py-2 border rounded-lg">
+            <div class="flex space-x-3 pt-4">
+                <button type="button" id="cancelBtn" class="flex-1 px-4 py-2 border text-gray-700 rounded-lg hover:bg-gray-50">Cancel</button>
+                <button type="submit" class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg">Add Medicine</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    let inventory = [];
+    const inventoryList = document.getElementById('inventoryList');
+    const addItemModal = document.getElementById('addItemModal');
+    const addItemBtn = document.getElementById('addItemBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const addItemForm = document.getElementById('addItemForm');
+    const searchInput = document.getElementById('searchInput');
+    const categoryFilter = document.getElementById('categoryFilter');
+
+    async function fetchInventory() {
+        try {
+            const response = await fetch('http://localhost:8080/api/medicines');
+            inventory = await response.json();
+            renderInventory();
+        } catch (err) {
+            console.error('Failed to fetch inventory', err);
+        }
+    }
+
+    function renderInventory(items = inventory) {
+        inventoryList.innerHTML = items.map(item => `<tr class="hover-row">
+            <td>${item.id}</td>
+            <td>${item.name}</td>
+            <td>${item.quantity}</td>
+            <td>LKR ${item.unitPrice.toFixed(2)}</td>
+            <td>${item.category}</td>
+            <td>${item.expiry}</td>
+            <td>${item.batch}</td>
+            <td>
+                <button onclick="editItem(${item.id})" class="btn-edit btn-sm">Edit</button>
+                <button onclick="deleteItem(${item.id})" class="btn-delete btn-sm">Delete</button>
+            </td>
+        </tr>`).join('');
+    }
+
+    function filterInventory() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const selectedCategory = categoryFilter.value;
+        const filtered = inventory.filter(item =>
+            item.name.toLowerCase().includes(searchTerm) &&
+            (!selectedCategory || item.category === selectedCategory)
+        );
+        renderInventory(filtered);
+    }
+
+    addItemBtn.addEventListener('click', () => {
+        addItemModal.classList.remove('hidden');
+        addItemModal.classList.add('flex');
+    });
+
+    cancelBtn.addEventListener('click', () => {
+        addItemModal.classList.add('hidden');
+        addItemModal.classList.remove('flex');
+        addItemForm.reset();
+    });
+
+    // Add new medicine (POST to backend)
+    addItemForm.addEventListener('submit', async e => {
+        e.preventDefault();
+        const newItem = {
+            name: document.getElementById('medicineName').value,
+            quantity: parseInt(document.getElementById('quantity').value),
+            unitPrice: parseFloat(document.getElementById('unitPrice').value),
+            category: document.getElementById('category').value,
+            expiry: document.getElementById('expiryDate').value,
+            batch: 'BTH' + String(Date.now()).slice(-3)
+        };
+
+        try {
+            const response = await fetch('http://localhost:8080/api/medicines', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newItem)
+            });
+            if (!response.ok) throw new Error('Failed to save medicine');
+            const savedItem = await response.json();
+            inventory.push(savedItem);
+            renderInventory();
+            addItemModal.classList.add('hidden');
+            addItemModal.classList.remove('flex');
+            addItemForm.reset();
+        } catch (err) {
+            alert('Failed to save medicine!');
+            console.error(err);
+        }
+    });
+
+    // Edit medicine
+    async function editItem(id) {
+        const item = inventory.find(i => i.id === id);
+        if(!item) return;
+
+        const newQty = prompt(`Edit quantity for ${item.name}:`, item.quantity);
+        if(newQty && !isNaN(newQty)) {
+            item.quantity = parseInt(newQty);
+            try {
+                const response = await fetch(`http://localhost:8080/api/medicines/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(item)
+                });
+                if (!response.ok) throw new Error('Failed to update medicine');
+                const updated = await response.json();
+                const index = inventory.findIndex(m => m.id === id);
+                inventory[index] = updated;
+                renderInventory();
+            } catch (err) {
+                alert('Failed to update medicine!');
+                console.error(err);
+            }
+        }
+    }
+
+    // Delete medicine
+    async function deleteItem(id) {
+        if(confirm('Are you sure?')) {
+            try {
+                const response = await fetch(`http://localhost:8080/api/medicines/${id}`, { method: 'DELETE' });
+                if (!response.ok) throw new Error('Failed to delete medicine');
+                inventory = inventory.filter(m => m.id !== id);
+                renderInventory();
+            } catch (err) {
+                alert('Failed to delete medicine!');
+                console.error(err);
+            }
+        }
+    }
+
+    addItemModal.addEventListener('click', e => {
+        if(e.target === addItemModal){
+            addItemModal.classList.add('hidden');
+            addItemModal.classList.remove('flex');
+            addItemForm.reset();
+        }
+    });
+
+    searchInput.addEventListener('input', filterInventory);
+    categoryFilter.addEventListener('change', filterInventory);
+
+    fetchInventory();
+</script>
+</body>
+</html>
