@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit User - Pharmacy System</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link th:href="@{/css/admin.css}" rel="stylesheet">
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <div class="grid-icon"></div>
+                    </div>
+                    <span class="logo-text">Pharmacy System</span>
+                </div>
+                <div class="version">v1.0</div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="/admin/users" class="nav-link">
+                            <i class="fas fa-users"></i>
+                            <span>All Users</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/admin/users" class="nav-link">
+                            <i class="fas fa-user-md"></i>
+                            <span>Pharmacists</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/admin/users/role/delivery_staff_employee" class="nav-link">
+                            <i class="fas fa-truck"></i>
+                            <span>Delivery Staff</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/admin/users/role/inventory_manager" class="nav-link">
+                            <i class="fas fa-boxes"></i>
+                            <span>Inventory Managers</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/admin/users/role/supplier" class="nav-link">
+                            <i class="fas fa-handshake"></i>
+                            <span>Suppliers</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="breadcrumbs">
+                    <span>Pharmacy System > User Management > Edit User</span>
+                </div>
+                <div class="user-profile">
+                    <img src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=40&h=40&fit=crop&crop=face" alt="Admin" class="avatar">
+                    <span class="user-name">Admin User</span>
+                    <a href="/logout" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Logout
+                    </a>
+                </div>
+            </header>
+            
+            <!-- Page Content -->
+            <div class="page-content">
+                <div class="page-header">
+                    <h1 class="page-title">Edit User</h1>
+                    <p class="page-subtitle">Update user information and settings</p>
+                </div>
+
+                <!-- Edit User Form -->
+                <div class="form-container">
+                    <!-- Error Message Display -->
+                    <div th:if="${param.error}" class="alert alert-error" style="background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span th:text="${param.error[0]}"></span>
+                    </div>
+                    
+                    <form th:action="@{/admin/users/update}" th:object="${user}" method="post" class="user-form">
+                        <input type="hidden" th:field="*{id}">
+                        
+                        <div class="form-grid">
+                            <!-- Personal Information -->
+                            <div class="form-section">
+                                <h3 class="form-section-title">Personal Information</h3>
+                                
+                                <div class="form-group">
+                                    <label for="firstName" class="form-label">First Name *</label>
+                                    <input type="text" id="firstName" th:field="*{firstName}" class="form-input" required>
+                                    <div class="form-error" th:if="${#fields.hasErrors('firstName')}" th:errors="*{firstName}"></div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="lastName" class="form-label">Last Name *</label>
+                                    <input type="text" id="lastName" th:field="*{lastName}" class="form-input" required>
+                                    <div class="form-error" th:if="${#fields.hasErrors('lastName')}" th:errors="*{lastName}"></div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="email" class="form-label">Email Address *</label>
+                                    <input type="email" id="email" th:field="*{email}" th:attr="data-original-email=${user.email}" class="form-input" required>
+                                    <div class="form-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="phoneNumber" class="form-label">Phone Number *</label>
+                                    <input type="tel" id="phoneNumber" th:field="*{phoneNumber}" class="form-input" required>
+                                    <div class="form-error" th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}"></div>
+                                </div>
+                            </div>
+
+                            <!-- Account Information -->
+                            <div class="form-section">
+                                <h3 class="form-section-title">Account Information</h3>
+                                
+                                <div class="form-group">
+                                    <label for="username" class="form-label">Username *</label>
+                                    <input type="text" id="username" th:field="*{username}" th:attr="data-original-username=${user.username}" class="form-input" required>
+                                    <div class="form-error" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="password" class="form-label">Password</label>
+                                    <input type="password" id="password" th:field="*{password}" class="form-input" placeholder="Leave blank to keep current password">
+                                    <div class="form-help">Leave blank to keep the current password</div>
+                                    <div class="form-error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="role" class="form-label">Role *</label>
+                                    <select id="role" th:field="*{role}" class="form-select" required>
+                                        <option value="">Select a role</option>
+                                        <option th:each="role : ${roles}" 
+                                                th:value="${role}" 
+                                                th:text="${role.name().replace('_', ' ')}">
+                                        </option>
+                                    </select>
+                                    <div class="form-error" th:if="${#fields.hasErrors('role')}" th:errors="*{role}"></div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-checkbox">
+                                        <input type="checkbox" th:field="*{active}">
+                                        <span class="checkmark"></span>
+                                        Active Account
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="form-actions">
+                            <a href="/admin/users" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i>
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i>
+                                Update User
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script th:src="@{/js/admin.js}"></script>
+    <script>
+        // Real-time validation
+        document.getElementById('username').addEventListener('blur', function() {
+            const username = this.value;
+            const originalUsername = this.getAttribute('data-original-username');
+            if (username && username !== originalUsername) {
+                checkUsernameAvailability(username);
+            }
+        });
+
+        document.getElementById('email').addEventListener('blur', function() {
+            const email = this.value;
+            const originalEmail = this.getAttribute('data-original-email');
+            if (email && email !== originalEmail) {
+                checkEmailAvailability(email);
+            }
+        });
+
+        function checkUsernameAvailability(username) {
+            const userId = document.querySelector('input[name="id"]').value;
+            const url = '/admin/users/api/check-username?username=' + encodeURIComponent(username) + 
+                       (userId ? '&excludeId=' + userId : '');
+            fetch(url)
+                .then(response => response.json())
+                .then(exists => {
+                    const input = document.getElementById('username');
+                    if (exists) {
+                        input.classList.add('error');
+                        showFieldError(input, 'Username already exists');
+                    } else {
+                        input.classList.remove('error');
+                        clearFieldError(input);
+                    }
+                });
+        }
+
+        function checkEmailAvailability(email) {
+            const userId = document.querySelector('input[name="id"]').value;
+            const url = '/admin/users/api/check-email?email=' + encodeURIComponent(email) + 
+                       (userId ? '&excludeId=' + userId : '');
+            fetch(url)
+                .then(response => response.json())
+                .then(exists => {
+                    const input = document.getElementById('email');
+                    if (exists) {
+                        input.classList.add('error');
+                        showFieldError(input, 'Email already exists');
+                    } else {
+                        input.classList.remove('error');
+                        clearFieldError(input);
+                    }
+                });
+        }
+
+        function showFieldError(input, message) {
+            clearFieldError(input);
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'form-error';
+            errorDiv.textContent = message;
+            input.parentNode.appendChild(errorDiv);
+        }
+
+        function clearFieldError(input) {
+            const existingError = input.parentNode.querySelector('.form-error');
+            if (existingError) {
+                existingError.remove();
+            }
+        }
+    </script>
+</body>
+</html>
+
