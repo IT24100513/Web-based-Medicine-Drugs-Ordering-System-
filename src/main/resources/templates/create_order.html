@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Order Management System</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css">
+    <style>
+        .error-message {
+            color: red;
+            font-size: 0.875em;
+        }
+        .alert {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-md bg-dark navbar-dark">
+    <a class="navbar-brand" href="#">Order Management System</a>
+    <div class="collapse navbar-collapse">
+        <ul class="navbar-nav">
+            <li class="nav-item">
+                <a class="nav-link" th:href="@{/orders}">Order Management</a>
+            </li>
+        </ul>
+    </div>
+</nav>
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8 col-md-10 col-sm-12 container justify-content-center card">
+            <h1 class="text-center" th:text="${order != null} ? 'Edit Order' : 'Place New Order'"></h1>
+
+            <!-- Error message display -->
+            <div th:if="${error}" class="alert alert-danger" role="alert">
+                <span th:text="${error}"></span>
+            </div>
+
+            <div class="card-body">
+                <form th:action="${order != null} ? @{'/orders/' + ${order.id}} : @{'/orders'}" method="POST" enctype="multipart/form-data">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Customer Name *</label>
+                    <input type="text" name="customerName" class="form-control"
+                        placeholder="Enter Customer Name" required th:value="${order != null} ? ${order.customerName} : ''"/>
+                            </div>
+                            <div class="form-group">
+                                <label>Phone Number *</label>
+                    <input type="tel" name="phoneNumber" class="form-control"
+                        placeholder="Enter Phone Number" required th:value="${order != null} ? ${order.phoneNumber} : ''"/>
+                            </div>
+                            <div class="form-group">
+                                <label>Email Address *</label>
+                    <input type="email" name="email" class="form-control"
+                        placeholder="Enter Email Address" required th:value="${order != null} ? ${order.email} : ''"/>
+                            </div>
+                            <div class="form-group">
+                                <label>Delivery Location *</label>
+                    <input type="text" name="location" class="form-control"
+                        placeholder="Enter Delivery Location" required th:value="${order != null} ? ${order.location} : ''"/>
+                            </div>
+                            <div class="form-group">
+                                <label>Gender</label>
+                                <select name="gender" class="form-control">
+                                    <option value="">Select Gender</option>
+                                    <option value="Male" th:selected="${order != null} ? ${order.gender} == 'Male' : false">Male</option>
+                                    <option value="Female" th:selected="${order != null} ? ${order.gender} == 'Female' : false">Female</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Medical Allergies</label>
+                                <textarea name="medicalAllergies" class="form-control"
+                                          placeholder="List any medical allergies" rows="3" th:text="${order != null} ? ${order.medicalAllergies} : ''"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Medicine *</label>
+                                <select name="medicineName" class="form-control" required>
+                                    <option value="">Select Medicine</option>
+                                    <option th:each="medicine : ${medicines}"
+                                            th:value="${medicine.name}"
+                                            th:text="${medicine.name + ' - $' + medicine.price}"
+                                            th:selected="${order != null} ? ${order.medicineName} == ${medicine.name} : false"></option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Quantity *</label>
+                    <input type="number" name="quantity" min="1" class="form-control"
+                        placeholder="Enter Quantity" required oninput="validity.valid||(value='');" th:value="${order != null} ? ${order.quantity} : ''"/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Order Date *</label>
+                    <input type="date" name="orderDate" class="form-control"
+                        th:value="${order != null} ? ${#temporals.format(order.orderDate, 'yyyy-MM-dd')} : ${#temporals.format(#temporals.createToday(), 'yyyy-MM-dd')}" required/>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Duration of Treatment</label>
+                    <input type="text" name="duration" class="form-control"
+                        placeholder="e.g., 2 weeks, 1 month" th:value="${order != null} ? ${order.duration} : ''"/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Payment Method *</label>
+                                <select name="paymentMethod" class="form-control" required>
+                                    <option value="">Select Payment Method</option>
+                                    <option value="Credit Card" th:selected="${order != null} ? ${order.paymentMethod} == 'Credit Card' : false">Credit Card</option>
+                                    <option value="Debit Card" th:selected="${order != null} ? ${order.paymentMethod} == 'Debit Card' : false">Debit Card</option>
+                                    <option value="PayPal" th:selected="${order != null} ? ${order.paymentMethod} == 'PayPal' : false">PayPal</option>
+                                    <option value="Cash" th:selected="${order != null} ? ${order.paymentMethod} == 'Cash' : false">Cash</option>
+                                    <option value="Bank Transfer" th:selected="${order != null} ? ${order.paymentMethod} == 'Bank Transfer' : false">Bank Transfer</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Prescription Image (Optional)</label>
+                                <input type="file" name="prescriptionImage" class="form-control-file" accept="image/*"/>
+                                <div th:if="${order != null && order.prescriptionImageUrl != null}">
+                                    <img th:src="${order.prescriptionImageUrl}" alt="Prescription Image" style="max-width: 100px; margin-top: 10px;"/>
+                                </div>
+                                <small class="form-text text-muted">Upload a photo of your prescription</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="box-footer text-center mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg" th:text="${order != null} ? 'Update Order' : 'Place Order'"></button>
+                        <a th:href="@{/orders}" class="btn btn-secondary btn-lg">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

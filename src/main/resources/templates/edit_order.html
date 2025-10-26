@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Order - Order Management System</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css">
+    <style>
+        .error-message {
+            color: red;
+            font-size: 0.875em;
+        }
+        .alert {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-md bg-dark navbar-dark">
+    <a class="navbar-brand" href="#">Order Management System</a>
+    <div class="collapse navbar-collapse">
+        <ul class="navbar-nav">
+            <li class="nav-item">
+                <a class="nav-link" th:href="@{/orders}">Order Management</a>
+            </li>
+        </ul>
+    </div>
+</nav>
+<div class="container">
+    <div class="row">
+        <div class="col-lg-10 col-md-12 container justify-content-center card">
+            <h1 class="text-center my-4">Update Order</h1>
+
+            <!-- Success/Error messages -->
+            <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <span th:text="${success}"></span>
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <span th:text="${error}"></span>
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <div class="card-body">
+                <form th:action="@{/orders/{id}(id=${order.id})}" method="POST" enctype="multipart/form-data">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Customer Name *</label>
+                                <input type="text" name="customerName" class="form-control"
+                                       placeholder="Enter Customer Name" th:value="${order.customerName}" required/>
+                            </div>
+                            <div class="form-group">
+                                <label>Phone Number *</label>
+                                <input type="tel" name="phoneNumber" class="form-control"
+                                       placeholder="Enter Phone Number" th:value="${order.phoneNumber}" required/>
+                            </div>
+                            <div class="form-group">
+                                <label>Email Address *</label>
+                                <input type="email" name="email" class="form-control"
+                                       placeholder="Enter Email Address" th:value="${order.email}" required/>
+                            </div>
+                            <div class="form-group">
+                                <label>Delivery Location *</label>
+                                <input type="text" name="location" class="form-control"
+                                       placeholder="Enter Delivery Location" th:value="${order.location}" required/>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Gender</label>
+                                <select name="gender" class="form-control">
+                                    <option value="">Select Gender</option>
+                                    <option value="Male" th:selected="${order.gender == 'Male'}">Male</option>
+                                    <option value="Female" th:selected="${order.gender == 'Female'}">Female</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Medical Allergies</label>
+                                <textarea name="medicalAllergies" class="form-control"
+                                          placeholder="List any medical allergies" rows="3"
+                                          th:text="${order.medicalAllergies}"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Order Date *</label>
+                                <input type="date" name="orderDate" class="form-control"
+                                       th:value="${#temporals.format(order.orderDate, 'yyyy-MM-dd')}" required/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Medicine *</label>
+                                <select name="medicineName" class="form-control" required>
+                                    <option value="">Select Medicine</option>
+                                    <option th:each="medicine : ${medicines}"
+                                            th:value="${medicine.name}"
+                                            th:text="${medicine.name + ' - $' + medicine.price}"
+                                            th:selected="${order.medicine != null && order.medicine.name == medicine.name}"></option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Quantity *</label>
+                                <input type="number" name="quantity" min="1" class="form-control"
+                                       placeholder="Enter Quantity" th:value="${order.quantity}" required
+                                       oninput="validity.valid||(value='');"/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Duration of Treatment</label>
+                                <input type="text" name="duration" class="form-control"
+                                       placeholder="e.g., 2 weeks, 1 month" th:value="${order.duration}"/>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Payment Method *</label>
+                                <select name="paymentMethod" class="form-control" required>
+                                    <option value="">Select Payment Method</option>
+                                    <option value="Credit Card" th:selected="${order.paymentMethod == 'Credit Card'}">Credit Card</option>
+                                    <option value="Debit Card" th:selected="${order.paymentMethod == 'Debit Card'}">Debit Card</option>
+                                    <option value="PayPal" th:selected="${order.paymentMethod == 'PayPal'}">PayPal</option>
+                                    <option value="Cash" th:selected="${order.paymentMethod == 'Cash'}">Cash</option>
+                                    <option value="Bank Transfer" th:selected="${order.paymentMethod == 'Bank Transfer'}">Bank Transfer</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Status *</label>
+                                <select name="status" class="form-control" required>
+                                    <option value="PENDING" th:selected="${order.status == 'PENDING'}">PENDING</option>
+                                    <option value="PROCESSING" th:selected="${order.status == 'PROCESSING'}">PROCESSING</option>
+                                    <option value="COMPLETED" th:selected="${order.status == 'COMPLETED'}">COMPLETED</option>
+                                    <option value="CANCELLED" th:selected="${order.status == 'CANCELLED'}">CANCELLED</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Prescription Image (Optional)</label>
+                                <input type="file" name="prescriptionImage" class="form-control-file" accept="image/*"/>
+                                <small class="form-text text-muted">Upload a new prescription image (leave empty to keep current)</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div th:if="${order.prescriptionImage}" class="form-group">
+                                <label>Current Prescription</label>
+                                <div>
+                                    <img th:src="@{'/uploads/' + ${order.prescriptionImage}}"
+                                         alt="Current prescription" style="max-width: 200px; max-height: 200px;"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="box-footer text-center mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">Update Order</button>
+                        <a th:href="@{/orders}" class="btn btn-secondary btn-lg">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js"></script>
+</body>
+</html>

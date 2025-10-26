@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit My Order - Customer Portal</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .main-container {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .error-message {
+            color: red;
+            font-size: 0.875em;
+        }
+    </style>
+</head>
+<body>
+<div class="container main-container">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="text-center mb-4">Edit My Order</h1>
+            <p class="text-center">Email: <span th:text="${customerEmail}"></span></p>
+        </div>
+    </div>
+
+    <!-- Error message display -->
+    <div th:if="${error}" class="alert alert-danger" role="alert">
+        <span th:text="${error}"></span>
+    </div>
+
+    <div class="card-body">
+        <!-- Form for editing order -->
+        <form th:action="@{/customer/orders/{id}(id=${order.id})}" method="POST" enctype="multipart/form-data" onsubmit="return validateForm()">
+            <input type="hidden" name="email" th:value="${customerEmail}">
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Customer Name *</label>
+                        <input type="text" name="customerName" class="form-control"
+                               placeholder="Enter Customer Name" th:value="${order.customerName}" required/>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone Number *</label>
+                        <input type="tel" name="phoneNumber" class="form-control"
+                               placeholder="Enter 10-digit Phone Number" th:value="${order.phoneNumber}"
+                               pattern="\d{10}" title="Please enter exactly 10 digits" required
+                               oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)"/>
+                        <small class="form-text text-muted">Must be exactly 10 digits</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Email Address *</label>
+                        <input type="email" name="email" class="form-control"
+                               placeholder="Enter Email Address" th:value="${customerEmail}" required readonly/>
+                        <small class="form-text text-muted">Email cannot be changed</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Delivery Location *</label>
+                        <input type="text" name="location" class="form-control"
+                               placeholder="Enter Delivery Location" th:value="${order.location}" required/>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Medical Allergies</label>
+                        <textarea name="medicalAllergies" class="form-control"
+                                  placeholder="List any medical allergies" rows="3"
+                                  th:text="${order.medicalAllergies}"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Medicine *</label>
+                        <select name="medicineName" class="form-control" required>
+                            <option value="">Select Medicine</option>
+                            <option th:each="medicine : ${medicines}"
+                                    th:value="${medicine.name}"
+                                    th:text="${medicine.name + ' - $' + medicine.price}"
+                                    th:selected="${order.medicine != null && order.medicine.name == medicine.name}"></option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Quantity *</label>
+                        <input type="number" name="quantity" min="1" class="form-control"
+                               placeholder="Enter Quantity" th:value="${order.quantity}" required
+                               oninput="validity.valid||(value='');"/>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Duration of Treatment</label>
+                        <input type="text" name="duration" class="form-control"
+                               placeholder="e.g., 2 weeks, 1 month" th:value="${order.duration}"/>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Payment Method *</label>
+                        <select name="paymentMethod" class="form-control" required>
+                            <option value="">Select Payment Method</option>
+                            <option value="Cash on Delivery" th:selected="${order.paymentMethod == 'Cash on Delivery'}">Cash on Delivery</option>
+                            <option value="Bank Transfer" th:selected="${order.paymentMethod == 'Bank Transfer'}">Bank Transfer</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Prescription Image (Optional)</label>
+                        <input type="file" name="prescriptionImage" class="form-control-file" accept="image/*"/>
+                        <small class="form-text text-muted">Upload a new prescription image (leave empty to keep current)</small>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div th:if="${order.prescriptionImage}" class="form-group">
+                        <label>Current Prescription</label>
+                        <div>
+                            <img th:src="@{'/uploads/' + ${order.prescriptionImage}}"
+                                 alt="Current prescription" style="max-width: 100px; max-height: 100px;"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="box-footer text-center mt-4">
+                <button type="submit" class="btn btn-primary btn-lg">Update Order</button>
+                <a th:href="@{/customer/orders?email={email}(email=${customerEmail})}" class="btn btn-secondary btn-lg">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function validateForm() {
+        const phoneNumber = document.querySelector('input[name="phoneNumber"]').value;
+        const phoneRegex = /^\d{10}$/;
+
+        if (!phoneRegex.test(phoneNumber)) {
+            alert('Phone number must be exactly 10 digits');
+            return false;
+        }
+
+        return true;
+    }
+
+    // Real-time phone number validation
+    document.querySelector('input[name="phoneNumber"]').addEventListener('input', function(e) {
+        this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);
+    });
+</script>
+</body>
+</html>

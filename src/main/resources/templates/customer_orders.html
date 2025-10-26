@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>My Orders - Customer Portal</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .main-container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+        }
+        .badge-pending {
+            background-color: #f39c12;
+            color: white;
+        }
+        .badge-processing {
+            background-color: #3498db;
+            color: white;
+        }
+        .badge-completed {
+            background-color: #27ae60;
+            color: white;
+        }
+        .badge-cancelled {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .badge-rejected {
+            background-color: #95a5a6;
+            color: white;
+        }
+        .prescription-image {
+            max-width: 80px;
+            max-height: 80px;
+            cursor: pointer;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 2px;
+        }
+        .prescription-image:hover {
+            opacity: 0.8;
+        }
+        .reject-reason {
+            background-color: #f8f9fa;
+            border-left: 4px solid #e74c3c;
+            padding: 10px;
+            margin-top: 5px;
+            font-size: 0.9em;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+        <a class="navbar-brand" th:href="@{/customer}">Pharmacy Customer Portal</a>
+        <div class="navbar-nav ml-auto">
+            <span class="navbar-text mr-3" th:with="email=${#strings.replace(customerEmail, ',', '')}">
+                Logged in as: <span th:text="${email}"></span>
+            </span>
+            <a class="nav-link" th:href="@{/customer/orders/new}">Place New Order</a>
+            <a class="nav-link" th:href="@{/customer}">Home</a>
+            <a class="nav-link" th:href="@{/customer/login}">Logout</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="main-container">
+                <h1 class="text-center mb-4">My Orders</h1>
+
+                <!-- ✅ Combined Success & Error Messages -->
+                <div th:if="${success != null || error != null}"
+                     th:classappend="${success != null} ? 'alert alert-success' : 'alert alert-danger'"
+                     role="alert">
+                    <span th:text="${success != null ? success : error}"></span>
+                </div>
+
+                <div class="text-center mb-4">
+                    <a th:href="@{/customer/orders/new}" class="btn btn-primary btn-lg">Place New Order</a>
+                </div>
+
+                <div th:if="${orders.empty}" class="alert alert-info text-center">
+                    <h4>No orders found</h4>
+                    <p>You haven't placed any orders yet.</p>
+                    <a th:href="@{/customer/orders/new}" class="btn btn-primary">Place Your First Order</a>
+                </div>
+
+                <div th:unless="${orders.empty}" class="table-responsive">
+                    <table class="table table-striped table-bordered table-hover">
+                        <thead class="thead-dark">
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Customer Name</th>
+                            <th>Medicine</th>
+                            <th>Quantity</th>
+                            <th>Total Amount</th>
+                            <th>Order Date</th>
+                            <th>Payment Method</th>
+                            <th>Status</th>
+                            <th>Prescription</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="order:${orders}">
+                            <td th:text="${order.id}"></td>
+                            <td th:text="${order.customerName}"></td>
+                            <td th:text="${order.medicine != null ? order.medicine.name : 'N/A'}"></td>
+                            <td th:text="${order.quantity}"></td>
+                            <td th:text="${'$' + order.totalAmount}" style="font-weight: bold; color: #27ae60;"></td>
+                            <td th:text="${#temporals.format(order.orderDate, 'yyyy-MM-dd')}"></td>
+                            <td th:text="${order.paymentMethod}"></td>
+                            <td>
+                                <span th:if="${order.status == 'PENDING'}" class="status-badge badge-pending">PENDING</span>
+                                <span th:if="${order.status == 'PROCESSING'}" class="status-badge badge-processing">PROCESSING</span>
+                                <span th:if="${order.status == 'COMPLETED'}" class="status-badge badge-completed">COMPLETED</span>
+                                <span th:if="${order.status == 'CANCELLED'}" class="status-badge badge-cancelled">CANCELLED</span>
+                                <span th:if="${order.status == 'REJECTED'}" class="status-badge badge-rejected">REJECTED</span>
+
+                                <!-- Show reject reason -->
+                                <div th:if="${order.status == 'REJECTED' and order.rejectReason != null}" class="reject-reason mt-2">
+                                    <strong>Rejection Reason:</strong>
+                                    <span th:text="${order.rejectReason}"></span>
+                                </div>
+                            </td>
+                            <td>
+                                <th:block th:if="${order.prescriptionImage}">
+                                    <img th:src="@{'/uploads/' + ${order.prescriptionImage}}"
+                                         alt="Prescription"
+                                         class="prescription-image"
+                                         data-toggle="modal"
+                                         th:attr="data-target='#prescriptionModal' + ${order.id}">
+
+                                    <!-- Modal for prescription image -->
+                                    <div class="modal fade" th:attr="id='prescriptionModal' + ${order.id}" tabindex="-1" role="dialog">
+                                        <div class="modal-dialog modal-lg" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Prescription for Order #<span th:text="${order.id}"></span></h5>
+                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                        <span aria-hidden="true">&times;</span>
+                                                    </button>
+                                                </div>
+                                                <div class="modal-body text-center">
+                                                    <img th:src="@{'/uploads/' + ${order.prescriptionImage}}"
+                                                         alt="Prescription"
+                                                         style="max-width: 100%; max-height: 600px;">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </th:block>
+                                <th:block th:unless="${order.prescriptionImage}">
+                                    No prescription
+                                </th:block>
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <!-- Edit button -->
+                                    <a th:href="@{/customer/orders/edit/{id}(id=${order.id},email=${customerEmail})}"
+                                       class="btn btn-sm btn-primary">Edit</a>
+
+                                    <!-- Delete button - only PENDING -->
+                                    <a th:if="${order.status == 'PENDING'}"
+                                       th:href="@{/customer/orders/delete/{id}(id=${order.id},email=${customerEmail})}"
+                                       class="btn btn-sm btn-danger"
+                                       onclick="return confirm('Are you sure you want to delete this order?')">Delete</a>
+                                    <span th:unless="${order.status == 'PENDING'}" class="text-muted"></span>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js"></script>
+</body>
+</html>
