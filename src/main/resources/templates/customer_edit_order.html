@@ -1,0 +1,347 @@
+﻿<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit My Order - Customer Portal</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .main-container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .error-message {
+            color: red;
+            font-size: 0.875em;
+        }
+        .phone-hint {
+            font-size: 0.875em;
+            color: #6c757d;
+        }
+        .current-prescription {
+            max-width: 200px;
+            max-height: 200px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .section-title {
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            color: #495057;
+            font-weight: 600;
+        }
+        .form-group label {
+            font-weight: 500;
+            color: #495057;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 10px 25px;
+        }
+        .btn-primary:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+            transition: all 0.3s ease;
+        }
+        .custom-file-label::after {
+            content: "Browse";
+        }
+        .navbar {
+            background-color: #343a40 !important;
+        }
+        .navbar-brand, .nav-link {
+            color: #fff !important;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+        <a class="navbar-brand" th:href="@{/customer}">Pharmacy Customer Portal</a>
+        <div class="navbar-nav ml-auto">
+            <a class="nav-link" th:href="@{/customer}">Home</a>
+            <a th:href="@{/customer/orders(email=${customerEmail})}" class="nav-link">My Orders</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="main-container">
+                <h1 class="text-center mb-4">Edit My Order</h1>
+                <p class="text-center text-muted">Email: <span th:text="${customerEmail}"></span></p>
+
+                <!-- Messages -->
+                <div th:if="${success}" class="alert alert-success" role="alert">
+                    <span th:text="${success}"></span>
+                </div>
+                <div th:if="${error}" class="alert alert-danger" role="alert">
+                    <span th:text="${error}"></span>
+                </div>
+
+                <!-- Edit Form -->
+                <form method="POST" enctype="multipart/form-data" onsubmit="return validateForm()"
+                      th:action="@{/customer/orders/{id}(id=${order.id})}">
+
+                    <!-- Hidden Fields -->
+                    <input type="hidden" name="email" th:value="${customerEmail}">
+                    <input type="hidden" name="orderDate" th:value="${#temporals.format(order.orderDate, 'yyyy-MM-dd')}">
+
+                    <h4 class="section-title">Personal Information</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Customer Name *</label>
+                                <input type="text" name="customerName" class="form-control" th:value="${order.customerName}" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Phone Number *</label>
+                                <input type="tel" name="phoneNumber" class="form-control" th:value="${order.phoneNumber}"
+                                       pattern="\d{10}" title="Please enter exactly 10 digits" required
+                                       oninput="formatPhoneNumber(this)">
+                                <small class="form-text text-muted phone-hint">Must be exactly 10 digits</small>
+                                <div id="phoneError" class="error-message" style="display: none;"></div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Email Address</label>
+                                <input type="email" class="form-control" th:value="${customerEmail}" readonly disabled>
+                                <small class="form-text text-muted">Email cannot be changed</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Gender</label>
+                                <select name="gender" class="form-control">
+                                    <option value="">Select Gender</option>
+                                    <option value="Male" th:selected="${order.gender == 'Male'}">Male</option>
+                                    <option value="Female" th:selected="${order.gender == 'Female'}">Female</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Delivery Location *</label>
+                                <input type="text" name="location" class="form-control" th:value="${order.location}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Medical Allergies</label>
+                                <textarea name="medicalAllergies" class="form-control" rows="2" th:text="${order.medicalAllergies}" placeholder="List any medical allergies you have"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h4 class="section-title mt-4">Order Details</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Medicine *</label>
+                                <select name="medicineName" class="form-control" required>
+                                    <option value="">Select Medicine</option>
+                                    <option th:each="medicine : ${medicines}"
+                                            th:value="${medicine.name}"
+                                            th:text="${medicine.name + ' - $' + medicine.price}"
+                                            th:selected="${order.medicine != null && order.medicine.name == medicine.name}">
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Quantity *</label>
+                                <input type="number" name="quantity" class="form-control" th:value="${order.quantity}"
+                                       min="1" required oninput="validateQuantity(this)">
+                                <div id="quantityError" class="error-message" style="display: none;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Duration of Treatment</label>
+                                <input type="text" name="duration" class="form-control" th:value="${order.duration}"
+                                       placeholder="e.g., 2 weeks, 1 month">
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Payment Method *</label>
+                                <select name="paymentMethod" class="form-control" required>
+                                    <option value="">Select Payment Method</option>
+                                    <option value="Cash on Delivery" th:selected="${order.paymentMethod == 'Cash on Delivery'}">Cash on Delivery</option>
+                                    <option value="Bank Transfer" th:selected="${order.paymentMethod == 'Bank Transfer'}">Bank Transfer</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h4 class="section-title mt-4">Prescription</h4>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label>Prescription Image (Optional)</label>
+                                <div class="custom-file">
+                                    <input type="file" name="prescriptionImage" class="custom-file-input" accept="image/*" id="prescriptionInput">
+                                    <label class="custom-file-label" for="prescriptionInput">Choose file</label>
+                                </div>
+                                <small class="form-text text-muted">Upload a new prescription image (leave empty to keep current)</small>
+                            </div>
+
+                            <div th:if="${order.prescriptionImage}" class="form-group">
+                                <label>Current Prescription</label>
+                                <div>
+                                    <img th:src="@{'/uploads/' + ${order.prescriptionImage}}" alt="Current prescription" class="current-prescription">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            Update Order
+                        </button>
+                        <a th:href="@{/customer/orders(email=${customerEmail})}" class="btn btn-secondary btn-lg ml-2">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Format phone number input
+    function formatPhoneNumber(input) {
+        let value = input.value.replace(/[^0-9]/g, '');
+        if (value.length > 10) {
+            value = value.slice(0, 10);
+        }
+        input.value = value;
+
+        const errorElement = document.getElementById('phoneError');
+        if (value.length !== 10 && value.length > 0) {
+            errorElement.textContent = 'Phone number must be exactly 10 digits';
+            errorElement.style.display = 'block';
+            input.classList.add('is-invalid');
+            input.classList.remove('is-valid');
+        } else if (value.length === 10) {
+            errorElement.style.display = 'none';
+            input.classList.remove('is-invalid');
+            input.classList.add('is-valid');
+        } else {
+            errorElement.style.display = 'none';
+            input.classList.remove('is-invalid');
+            input.classList.remove('is-valid');
+        }
+    }
+
+    // Validate quantity input
+    function validateQuantity(input) {
+        const value = parseInt(input.value);
+        const errorElement = document.getElementById('quantityError');
+
+        if (isNaN(value) || value < 1) {
+            errorElement.textContent = 'Quantity must be at least 1';
+            errorElement.style.display = 'block';
+            input.classList.add('is-invalid');
+            input.classList.remove('is-valid');
+        } else {
+            errorElement.style.display = 'none';
+            input.classList.remove('is-invalid');
+            input.classList.add('is-valid');
+        }
+    }
+
+    // Custom file input
+    document.querySelector('.custom-file-input').addEventListener('change', function(e) {
+        var fileName = e.target.files[0] ? e.target.files[0].name : 'Choose file';
+        var nextSibling = e.target.nextElementSibling;
+        nextSibling.innerText = fileName;
+    });
+
+    // Form validation before submission
+    function validateForm() {
+        const phoneInput = document.querySelector('input[name="phoneNumber"]');
+        const quantityInput = document.querySelector('input[name="quantity"]');
+        let isValid = true;
+
+        // Validate phone number
+        if (!phoneInput.value.match(/^\d{10}$/)) {
+            document.getElementById('phoneError').textContent = 'Phone number must be exactly 10 digits';
+            document.getElementById('phoneError').style.display = 'block';
+            phoneInput.classList.add('is-invalid');
+            phoneInput.classList.remove('is-valid');
+            isValid = false;
+        } else {
+            phoneInput.classList.add('is-valid');
+            phoneInput.classList.remove('is-invalid');
+        }
+
+        // Validate quantity
+        const quantity = parseInt(quantityInput.value);
+        if (isNaN(quantity) || quantity < 1) {
+            document.getElementById('quantityError').textContent = 'Quantity must be at least 1';
+            document.getElementById('quantityError').style.display = 'block';
+            quantityInput.classList.add('is-invalid');
+            quantityInput.classList.remove('is-valid');
+            isValid = false;
+        } else {
+            quantityInput.classList.add('is-valid');
+            quantityInput.classList.remove('is-invalid');
+        }
+
+        if (!isValid) {
+            const firstError = document.querySelector('.is-invalid');
+            if (firstError) {
+                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        return isValid;
+    }
+
+    // Initialize validation on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Validate initial values
+        const phoneInput = document.querySelector('input[name="phoneNumber"]');
+        const quantityInput = document.querySelector('input[name="quantity"]');
+
+        if (phoneInput.value) formatPhoneNumber(phoneInput);
+        if (quantityInput.value) validateQuantity(quantityInput);
+
+        // Add validation to required fields
+        document.querySelectorAll('input[required], select[required]').forEach(function(input) {
+            input.addEventListener('change', function() {
+                if (this.value) {
+                    this.classList.add('is-valid');
+                    this.classList.remove('is-invalid');
+                } else {
+                    this.classList.add('is-invalid');
+                    this.classList.remove('is-valid');
+                }
+            });
+        });
+    });
+</script>
+</body>
+</html>
