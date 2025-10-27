@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Order Management System</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css">
+  <style>
+    .error-message {
+        color: red;
+        font-size: 0.875em;
+    }
+    .alert {
+        margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-md bg-dark navbar-dark">
+  <a class="navbar-brand" href="#">Order Management System</a>
+  <div class="collapse navbar-collapse">
+    <ul class="navbar-nav">
+      <li class="nav-item">
+        <a class="nav-link" th:href="@{/orders}">Order Management</a>
+      </li>
+    </ul>
+  </div>
+</nav>
+<div class="container">
+  <div class="row">
+    <div class="col-lg-8 col-md-10 col-sm-12 container justify-content-center card">
+      <h1 class="text-center">Place New Order</h1>
+
+      <!-- Error message display -->
+      <div th:if="${error}" class="alert alert-danger" role="alert">
+        <span th:text="${error}"></span>
+      </div>
+
+      <div class="card-body">
+        <!-- Changed to use individual parameters instead of object binding -->
+        <form action="/orders" method="POST" enctype="multipart/form-data">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label>Customer Name *</label>
+                <input type="text" name="customerName" class="form-control"
+                       placeholder="Enter Customer Name" required/>
+              </div>
+              <div class="form-group">
+                <label>Phone Number *</label>
+                <input type="tel" name="phoneNumber" class="form-control"
+                       placeholder="Enter Phone Number" required/>
+              </div>
+              <div class="form-group">
+                <label>Email Address *</label>
+                <input type="email" name="email" class="form-control"
+                       placeholder="Enter Email Address" required/>
+              </div>
+              <div class="form-group">
+                <label>Delivery Location *</label>
+                <input type="text" name="location" class="form-control"
+                       placeholder="Enter Delivery Location" required/>
+              </div>
+              <div class="form-group">
+                <label>Gender</label>
+                <select name="gender" class="form-control">
+                  <option value="">Select Gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label>Medical Allergies</label>
+                <textarea name="medicalAllergies" class="form-control"
+                          placeholder="List any medical allergies" rows="3"></textarea>
+              </div>
+              <div class="form-group">
+                <label>Product Name *</label>
+                <input type="text" name="productName" class="form-control"
+                       placeholder="Enter Product Name" required/>
+              </div>
+              <div class="form-group">
+                <label>Quantity *</label>
+                <input type="number" name="quantity" min="1" class="form-control"
+                       placeholder="Enter Quantity" required oninput="validity.valid||(value='');"/>
+              </div>
+              <div class="form-group">
+                <label>Price per Unit ($) *</label>
+                <input type="number" step="0.01" name="price" min="0.01" class="form-control"
+                       placeholder="Enter Price" required oninput="validity.valid||(value='');"/>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label>Order Date *</label>
+                <input type="date" name="orderDate" class="form-control"
+                       th:value="${#temporals.format(#temporals.createToday(), 'yyyy-MM-dd')}" required/>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label>Duration of Treatment</label>
+                <input type="text" name="duration" class="form-control"
+                       placeholder="e.g., 2 weeks, 1 month"/>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label>Payment Method *</label>
+                <select name="paymentMethod" class="form-control" required>
+                  <option value="">Select Payment Method</option>
+                  <option value="Credit Card">Credit Card</option>
+                  <option value="Debit Card">Debit Card</option>
+                  <option value="PayPal">PayPal</option>
+                  <option value="Cash">Cash</option>
+                  <option value="Bank Transfer">Bank Transfer</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label>Prescription Image (Optional)</label>
+                <input type="file" name="prescriptionImage" class="form-control-file" accept="image/*"/>
+                <small class="form-text text-muted">Upload a photo of your prescription</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="box-footer text-center mt-4">
+            <button type="submit" class="btn btn-primary btn-lg">Place Order</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

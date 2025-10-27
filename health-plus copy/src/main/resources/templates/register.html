@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Health Plus Pharmacy — Register</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        /* Soft medical gradient backdrop */
+        body {
+          min-height: 100vh;
+          background: radial-gradient(1200px 600px at 10% 0%, #e7f6ff 0%, #f7fbff 40%, #ffffff 100%);
+        }
+        .brand-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: .5rem;
+          padding: .5rem .9rem;
+          border-radius: 999px;
+          background: #eaf7ef;
+          color: #1f8b4c;
+          font-weight: 600;
+          font-size: .9rem;
+        }
+        .auth-card {
+          border: 1px solid #e9eef3;
+          box-shadow: 0 10px 30px rgba(16, 24, 40, .08);
+        }
+        .form-label.required::after {
+          content: " *";
+          color: #dc3545;
+          font-weight: 600;
+        }
+        .help-text {
+          font-size: .85rem;
+          color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-xl-5 col-lg-6">
+            <!-- Brand / context -->
+            <div class="text-center mb-3">
+        <span class="brand-badge">
+          <!-- pill icon -->
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M8.5 1a4.5 4.5 0 0 1 3.182 7.682l-5.818 5.818A4.5 4.5 0 1 1 1.864 8.682L7.682 2.864A4.48 4.48 0 0 1 8.5 1m0 1a3.5 3.5 0 0 0-2.475 1.025L.879 8.171a3.5 3.5 0 1 0 4.95 4.95l5.146-5.146A3.5 3.5 0 0 0 8.5 2"/>
+          </svg>
+          Health Plus Pharmacy
+        </span>
+            </div>
+
+            <div class="card auth-card rounded-4 p-3 p-sm-4">
+                <div class="card-body">
+                    <h2 class="text-center mb-2">Create your account</h2>
+                    <p class="text-center text-secondary mb-4">Shop medicines & essentials at Health Plus Pharmacy</p>
+                    <hr class="mb-4"/>
+
+                    <!-- Success alert -->
+                    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+                        <strong>Account created successfully!</strong>
+                        <a class="ms-2" href="/login">Login</a>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+
+                    <form method="post" th:object="${registerDto}" th:action="@{/register}" novalidate>
+
+                        <div class="mb-3">
+                            <a href="/" class="btn btn-outline-secondary btn-sm">← Back</a>
+                        </div>
+
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                        <!-- First / Last name -->
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <label for="firstName" class="form-label required">First Name</label>
+                                <input id="firstName" type="text" class="form-control" th:field="*{firstName}" placeholder="e.g., Imal" required>
+                                <div class="invalid-feedback">First name is required.</div>
+                                <p th:if="${#fields.hasErrors('firstName')}" class="text-danger small" th:errors="*{firstName}"></p>
+                            </div>
+                            <div class="col-sm-6">
+                                <label for="lastName" class="form-label required">Last Name</label>
+                                <input id="lastName" type="text" class="form-control" th:field="*{lastName}" placeholder="e.g., Menuka" required>
+                                <div class="invalid-feedback">Last name is required.</div>
+                                <p th:if="${#fields.hasErrors('lastName')}" class="text-danger small" th:errors="*{lastName}"></p>
+                            </div>
+                        </div>
+
+                        <!-- Email -->
+                        <div class="mt-3">
+                            <label for="email" class="form-label required">Email</label>
+                            <input id="email" type="email" class="form-control" th:field="*{email}" placeholder="name@example.com" required>
+                            <div class="invalid-feedback">Please enter a valid email.</div>
+                            <p th:if="${#fields.hasErrors('email')}" class="text-danger small" th:errors="*{email}"></p>
+                        </div>
+
+                        <!-- Phone (STRICT numeric-only on input + HTML pattern) -->
+                        <div class="mt-3">
+                            <label for="phone" class="form-label required">Phone</label>
+                            <input
+                                    id="phone"
+                                    type="tel"
+                                    class="form-control"
+                                    th:field="*{phone}"
+                                    placeholder="07XXXXXXXX"
+                                    inputmode="numeric"
+                                    pattern="^[0-9]{10}$"
+                                    maxlength="10"
+                                    aria-describedby="phoneHelp"
+                                    required>
+                            <small id="phoneHelp" class="help-text">Enter a 10-digit Sri Lankan mobile number (numbers only).</small>
+                            <div class="invalid-feedback">Phone must be exactly 10 digits (numbers only).</div>
+                            <p th:if="${#fields.hasErrors('phone')}" class="text-danger small" th:errors="*{phone}"></p>
+                        </div>
+
+                        <!-- Address -->
+                        <div class="mt-3">
+                            <label for="address" class="form-label required">Address</label>
+                            <input id="address" type="text" class="form-control" th:field="*{address}" placeholder="Street, City" required>
+                            <div class="invalid-feedback">Address is required.</div>
+                            <p th:if="${#fields.hasErrors('address')}" class="text-danger small" th:errors="*{address}"></p>
+                        </div>
+
+                        <!-- Password / Confirm -->
+                        <div class="mt-3">
+                            <label for="password" class="form-label required">Password</label>
+                            <div class="input-group">
+                                <input id="password" type="password" class="form-control" th:field="*{password}" placeholder="••••••••" minlength="8" required>
+                                <button class="btn btn-outline-secondary" type="button" id="togglePwd">Show</button>
+                            </div>
+                            <div class="help-text mt-1">Minimum 8 characters.</div>
+                            <div class="invalid-feedback">Please provide a valid password (min 8 chars).</div>
+                            <p th:if="${#fields.hasErrors('password')}" class="text-danger small" th:errors="*{password}"></p>
+                        </div>
+
+                        <div class="mt-3">
+                            <label for="confirmPassword" class="form-label required">Confirm Password</label>
+                            <input id="confirmPassword" type="password" class="form-control" th:field="*{confirmPassword}" placeholder="Re-enter password" required>
+                            <div class="invalid-feedback">Passwords must match.</div>
+                            <p th:if="${#fields.hasErrors('confirmPassword')}" class="text-danger small" th:errors="*{confirmPassword}"></p>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="row mt-4 gy-2">
+                            <div class="col-12 d-grid">
+                                <button type="submit" class="btn btn-success btn-lg">Create account</button>
+                            </div>
+                            <div class="col-12 d-grid">
+                                <a href="/" class="btn btn-outline-secondary">Cancel</a>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Small legal -->
+                    <p class="text-center text-muted mt-3 mb-0" style="font-size:.85rem;">
+                        By creating an account you agree to our <a href="/terms">Terms</a> & <a href="/privacy">Privacy Policy</a>.
+                    </p>
+                </div>
+            </div>
+
+            <p class="text-center mt-3 mb-0">
+                Already have an account? <a href="/login">Login</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // -------- Numeric-only phone enforcement (type safety on the client) --------
+    const phoneEl = document.getElementById('phone');
+    phoneEl.addEventListener('input', () => {
+      // Strip any non-digits immediately
+      const digitsOnly = phoneEl.value.replace(/\D+/g, '');
+      if (phoneEl.value !== digitsOnly) phoneEl.value = digitsOnly;
+    });
+    phoneEl.addEventListener('paste', (e) => {
+      e.preventDefault();
+      const pasted = (e.clipboardData || window.clipboardData).getData('text');
+      const digitsOnly = pasted.replace(/\D+/g, '');
+      document.execCommand('insertText', false, digitsOnly);
+    });
+
+    // -------- Show/Hide password --------
+    const togglePwdBtn = document.getElementById('togglePwd');
+    const pwdInput = document.getElementById('password');
+    togglePwdBtn.addEventListener('click', () => {
+      const isPwd = pwdInput.type === 'password';
+      pwdInput.type = isPwd ? 'text' : 'password';
+      togglePwdBtn.textContent = isPwd ? 'Hide' : 'Show';
+    });
+
+    // -------- Bootstrap custom validation + confirm password match --------
+    (function () {
+      'use strict';
+      const form = document.querySelector('form');
+      const confirmEl = document.getElementById('confirmPassword');
+
+      form.addEventListener('submit', function (event) {
+        // Built-in HTML constraints first
+        if (!form.checkValidity()) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+
+        // Confirm password equality
+        if (pwdInput.value !== confirmEl.value) {
+          event.preventDefault();
+          event.stopPropagation();
+          confirmEl.setCustomValidity('Passwords do not match');
+        } else {
+          confirmEl.setCustomValidity('');
+        }
+
+        form.classList.add('was-validated');
+      }, false);
+
+      // Re-validate confirm as user types
+      confirmEl.addEventListener('input', () => {
+        if (pwdInput.value === confirmEl.value) {
+          confirmEl.setCustomValidity('');
+        }
+      });
+    })();
+</script>
+</body>
+</html>
